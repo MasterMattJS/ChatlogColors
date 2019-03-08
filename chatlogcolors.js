@@ -1,6 +1,6 @@
 // modes line or name or fullText
 var mode = 'line';
-var opacity = 0.5;
+var opacity = 0.6;
 var names = [];
 var colors = [];
 
