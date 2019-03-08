@@ -69,7 +69,6 @@ function setupRecolorObserver() {
 
 function setupGameStartObserver(callback) {
     var gameStartObserver = new MutationObserver((_li, _o) => {
-        console.log("startupObserver ^^");
         if (document.querySelector('.chat-log-scroll-inner-inner')) {
             gameStartObserver.disconnect();
 
@@ -84,4 +83,4 @@ function setupGameStartObserver(callback) {
     });
 }
 
-setupGameStartObserver(setupChildObserver);
+setupGameStartObserver(setupRecolorObserver);
