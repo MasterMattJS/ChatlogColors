@@ -52,35 +52,48 @@ let chatRecolor = new ChatRecolor();
 
 fullChatlogRecolor = () => chatRecolor.recolor();
 
-// https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver
-function setupRecolorObserver() {
-    var recolorObserver = new MutationObserver((_li, _o) => {
-        fullChatlogRecolor();
-    });
-
-    var chatContainer = document.querySelector('.chat-log-scroll-inner-inner');
-
-    recolorObserver.observe(chatContainer, {
-        attributes: false,
-        childList: true,
-        subtree: false
-    });
-}
-
-function setupGameStartObserver(callback) {
-    var gameStartObserver = new MutationObserver((_li, _o) => {
-        if (document.querySelector('.chat-log-scroll-inner-inner')) {
-            gameStartObserver.disconnect();
-
-            callback();
+// https://dom.spec.whatwg.org/#interface-mutationobserver
+class RecolorObserver extends MutationObserver {
+    constructor() {
+        super((_li, _o) => {
+            fullChatlogRecolor();
+        });
+        this.chatContainer = null;
+    }
+    observe() {
+        let chatContainer = document.querySelector('.chat-log-scroll-inner-inner');
+        if (this.chatContainer === chatContainer) {
+            return;
         }
-    });
-
-    gameStartObserver.observe(document.body, {
-        attributes: false,
-        childList: true,
-        subtree: true,
-    });
+        this.chatContainer = chatContainer;
+        super.observe(chatContainer, {
+            childList: true,
+        });
+    }
+    disconnect() {
+        this.chatContainer = null;
+    }
 }
 
-setupGameStartObserver(setupRecolorObserver);
+class GameStartObserver extends MutationObserver {
+    constructor(secondObserver) {
+        super((_li, _o) => {
+            if (document.querySelector('.chat-log-scroll-inner-inner')) {
+                secondObserver.observe();
+            } else {
+                secondObserver.disconnect();
+            }
+        });
+    }
+    observe() {
+        super.observe(document.body, {
+            childList: true,
+            subtree: true,
+        });
+    }
+}
+
+var recolorObserver = new RecolorObserver();
+var gameStartObserver = new GameStartObserver(recolorObserver);
+
+gameStartObserver.observe();
