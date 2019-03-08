@@ -1,4 +1,13 @@
-// modes line or name or fullText
+// ==UserScript==
+// @name PonyTown ChatlogColors
+// @namespace MasterMattJS.github.io
+// @author MasterMattJS
+// @author loxaxs
+// @source https://github.com/MasterMattJS/ChatlogColors
+// @match https://pony.town/*
+// @grant none
+// ==/UserScript==
+
 var opacity = 0.5;
 
 function randrgba() {
