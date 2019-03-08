@@ -41,4 +41,38 @@ class ChatRecolor {
 
 let chatRecolor = new ChatRecolor();
 
-setInterval(() => chatRecolor.recolor(), 40);
+fullChatlogRecolor = () => chatRecolor.recolor();
+
+// https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver
+function setupRecolorObserver() {
+    var recolorObserver = new MutationObserver((_li, _o) => {
+        fullChatlogRecolor();
+    });
+
+    var chatContainer = document.querySelector('.chat-log-scroll-inner-inner');
+
+    recolorObserver.observe(chatContainer, {
+        attributes: false,
+        childList: true,
+        subtree: false
+    });
+}
+
+function setupGameStartObserver(callback) {
+    var gameStartObserver = new MutationObserver((_li, _o) => {
+        console.log("startupObserver ^^");
+        if (document.querySelector('.chat-log-scroll-inner-inner')) {
+            gameStartObserver.disconnect();
+
+            callback();
+        }
+    });
+
+    gameStartObserver.observe(document.body, {
+        attributes: false,
+        childList: true,
+        subtree: true,
+    });
+}
+
+setupGameStartObserver(setupChildObserver);
