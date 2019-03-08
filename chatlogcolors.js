@@ -5,7 +5,9 @@ var names = [];
 var colors = [];
 
 function r() {
-    return "rgba(" + Math.floor(Math.random() * 256) + "," + Math.floor(Math.random() * 256) + "," + Math.floor(Math.random() * 256) + "," + opacity + ")";
+    var max = 256;
+    var min = 50;
+    return "rgba(" + Math.floor(Math.random() * (max - min) + min) + "," + Math.floor(Math.random() * (max - min) + min) + "," + Math.floor(Math.random() * (max - min) + min) + "," + opacity + ")";
 }
 
 function saveNames(chatLine) {
@@ -36,11 +38,11 @@ function randomColors(chatLine) {
                     chatLine[i].style.background = colors[j];
                 } else if (mode == 'name') {
                     var nameColor = document.getElementsByClassName('chat-line-name');
-                    nameColor[i].style.color = colors[j];
+                    nameColor[i].style.color = colors[j].replace("rgba", "rgb").slice(0, colors[j].lastIndexOf(",") - 1) + ")";;
                 } else if (mode == 'fullText') {
                     var nameColor = document.getElementsByClassName('chat-line-name');
-                    nameColor[i].style.color = colors[j];
-                    chatLine[i].style.color = colors[j];
+                    nameColor[i].style.color = colors[j].replace("rgba", "rgb").slice(0, colors[j].lastIndexOf(",") - 1) + ")";;
+                    chatLine[i].style.color = colors[j].replace("rgba", "rgb").slice(0, colors[j].lastIndexOf(",") - 1) + ")";;
                 }
                 break;
             }
