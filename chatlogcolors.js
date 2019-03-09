@@ -1,58 +1,99 @@
-// modes line or name or fullText
-var mode = 'line';
-var opacity = 0.6;
-var names = [];
-var colors = [];
+// ==UserScript==
+// @name PonyTown ChatlogColors
+// @namespace MasterMattJS.github.io
+// @author MasterMattJS
+// @author loxaxs
+// @source https://github.com/MasterMattJS/ChatlogColors
+// @match https://pony.town/*
+// @grant none
+// ==/UserScript==
 
-function r() {
-    var max = 256;
-    var min = 50;
-    return "rgba(" + Math.floor(Math.random() * (max - min) + min) + "," + Math.floor(Math.random() * (max - min) + min) + "," + Math.floor(Math.random() * (max - min) + min) + "," + opacity + ")";
+var opacity = 0.5;
+
+function randrgba() {
+    let d = () => Math.floor(Math.random() * 256);;
+    return `rgba(${d()}, ${d()}, ${d()}, ${opacity})`;
 }
 
-function saveNames(chatLine) {
-    for (var i = 0; i < chatLine.length; i++) {
-        var name = chatLine[i].textContent.replace("[party]", "").slice(1, chatLine[i].textContent.indexOf("]: "));
+function getName(chatLine) {
+    let text = chatLine.textContent;
+    return text.replace("[party]", "").slice(1, text.indexOf("]: "));
+}
 
-        for (var j = 0; j < names.length + 1; j++) {
-            if (names[j] == name) {
-                break;
-            }
-            if (names[j] == null) {
-                names[j] = name;
-                colors[j] = r();
-                break;
-            }
+class RandomDefaultColorMap extends Map {
+    obtain(name) {
+        let color = super.get(name);
+        if (!color) {
+            color = randrgba();
+            super.set(name, color);
+        }
+        return color;
+    }
+}
+
+function setColor(chatLine, color) {
+    chatLine.style.background = color;
+}
+
+class ChatRecolor {
+    constructor() {
+        this.autoColor = new RandomDefaultColorMap();
+    }
+    recolor() {
+        for (let chatLine of document.getElementsByClassName('chat-line')) {
+            let name = getName(chatLine);
+            let color = this.autoColor.obtain(name);
+            setColor(chatLine, color);
         }
     }
 }
 
-function randomColors(chatLine) {
+let chatRecolor = new ChatRecolor();
 
-    for (var i = chatLine.length - 1; i > 0; i--) {
-        var name = chatLine[i].textContent.replace("[party]", "").slice(1, chatLine[i].textContent.indexOf("]: "));
-        for (var j = 0; j < names.length; j++) {
+fullChatlogRecolor = () => chatRecolor.recolor();
 
-            if (names[j] == name) {
-                if (mode == 'line') {
-                    chatLine[i].style.background = colors[j];
-                } else if (mode == 'name') {
-                    var nameColor = document.getElementsByClassName('chat-line-name');
-                    nameColor[i].style.color = colors[j].replace("rgba", "rgb").slice(0, colors[j].lastIndexOf(",") - 1) + ")";;
-                } else if (mode == 'fullText') {
-                    var nameColor = document.getElementsByClassName('chat-line-name');
-                    nameColor[i].style.color = colors[j].replace("rgba", "rgb").slice(0, colors[j].lastIndexOf(",") - 1) + ")";;
-                    chatLine[i].style.color = colors[j].replace("rgba", "rgb").slice(0, colors[j].lastIndexOf(",") - 1) + ")";;
-                }
-                break;
-            }
+// https://dom.spec.whatwg.org/#interface-mutationobserver
+class RecolorObserver extends MutationObserver {
+    constructor() {
+        super((_li, _o) => {
+            fullChatlogRecolor();
+        });
+        this.chatContainer = null;
+    }
+    observe() {
+        let chatContainer = document.querySelector('.chat-log-scroll-inner-inner');
+        if (this.chatContainer === chatContainer) {
+            return;
         }
+        this.chatContainer = chatContainer;
+        super.observe(chatContainer, {
+            childList: true,
+        });
+    }
+    disconnect() {
+        this.chatContainer = null;
     }
 }
 
-function chatlogRecolor() {
-    var chatLine = document.getElementsByClassName('chat-line');
-    saveNames(chatLine);
-    randomColors(chatLine);
+class GameStartObserver extends MutationObserver {
+    constructor(secondObserver) {
+        super((_li, _o) => {
+            if (document.querySelector('.chat-log-scroll-inner-inner')) {
+                secondObserver.observe();
+            } else {
+                secondObserver.disconnect();
+            }
+        });
+    }
+    observe() {
+        super.observe(document.body, {
+            childList: true,
+            subtree: true,
+        });
+    }
 }
-setInterval(chatlogRecolor, 10);
+
+var recolorObserver = new RecolorObserver();
+var gameStartObserver = new GameStartObserver(recolorObserver);
+
+gameStartObserver.observe();
